@@ -1,4 +1,4 @@
-[//]: # (SPDX-License-Identifier: CC-BY-4.0)
+[//]: # "SPDX-License-Identifier: CC-BY-4.0"
 
 # Hyperledger Fabric Digital Product Passport
 
@@ -13,37 +13,53 @@ Organization peers and an ordering service node. You can use it on your local ma
 You can also use it to deploy and test your own Fabric chaincodes and applications. To get started, see
 the [test network tutorial](https://hyperledger-fabric.readthedocs.io/en/latest/test_network.html).
 
-
 # Digital Product Passport Prototype
+
 ## Run the test network
+
 To test the application you first have to run the test network. Instructions are also in the [test network tutorial](https://hyperledger-fabric.readthedocs.io/en/release-2.5/test_network.html).
+
 ```
 cd test-network
-``` 
-With the ``network.sh`` script the network can be started.
+```
+
+With the `network.sh` script the network can be started.
+
 ```
 ./network.sh down
-``` to remove any container or artifact from previous runs
+```
+
+to remove any container or artifact from previous runs
+
 ```
 ./network.sh up
-``` to bring up the network together with its peers and orderer nodes.
+```
+
+to bring up the network together with its peers and orderer nodes.
 
 Then a channel has to be created for the communication between the organizations.
+
 ```
 ./network.sh createChannel
-``` this creates a channel with the name 'mychannel'
+```
+
+this creates a channel with the name 'mychannel'
 
 After that you have to install the chaincode on the channel:
+
 ```
 ./network.sh deployCC -ccn basic -ccp ../product-passport/chaincode-typescript -ccl typescript
 ```
 
 ## Interacting with the network and chaincode
+
 To interact with the test network and chaincode the peer CLI can be used.
 To use it the binaries have to be set as well as the fabric cfg path to point to the core.yaml
+
 ```
 export PATH=${PWD}/../bin:$PATH
 ```
+
 ```
 export FABRIC_CFG_PATH=$PWD/../config/
 ```
@@ -51,6 +67,7 @@ export FABRIC_CFG_PATH=$PWD/../config/
 When operating as Organisation 1 the environment variables can be set to the following:
 
 ## Environment variables for Org1
+
 ```
 export CORE_PEER_TLS_ENABLED=true
 export CORE_PEER_LOCALMSPID="Org1MSP"
@@ -58,9 +75,6 @@ export CORE_PEER_TLS_ROOTCERT_FILE=${PWD}/organizations/peerOrganizations/org1.e
 export CORE_PEER_MSPCONFIGPATH=${PWD}/organizations/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp
 export CORE_PEER_ADDRESS=localhost:7051
 ```
-
-
-
 
 ## License <a name="license"></a>
 
