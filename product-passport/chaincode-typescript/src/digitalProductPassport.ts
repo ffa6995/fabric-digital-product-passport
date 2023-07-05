@@ -15,8 +15,8 @@ import { Product, Material } from "./product";
 import { createHash } from "crypto";
 
 @Info({
-  title: "ProcutTransfer",
-  description: "Smart contract for trading products",
+  title: "DigitalProductPassport",
+  description: "Smart contract for a digital product passport",
 })
 export class ProductTransferContract extends Contract {
   constructor() {
@@ -78,6 +78,15 @@ export class ProductTransferContract extends Contract {
     const materials: Material[] = [material1, material2];
     const products: Product[] = [product1, product2];
 
+    // save material data on blockchain
+    for (const material of materials) {
+      await ctx.stub.putState(
+        material.ID,
+        Buffer.from(stringify(sortKeysRecursive(material)))
+      );
+      console.info(`Material ${material.ID} initialized`);
+    }
+
     // hash materials data to save on blockchain
     const hashedMaterials = materials.map((material) =>
       this.hashMaterial(material)
@@ -95,13 +104,10 @@ export class ProductTransferContract extends Contract {
       );
     }
 
+    // save products with hashed materials to keep material composition private
     for (const product of products) {
       product.docType = "product";
       product.Materials = hashedMaterials;
-      // example of how to write to world state deterministically
-      // use convetion of alphabetic order
-      // we insert data in alphabetic order using 'json-stringify-deterministic' and 'sort-keys-recursive'
-      // when retrieving data, in any lang, the order of data will be the same and consequently also the corresonding hash
       await ctx.stub.putState(
         product.ID,
         Buffer.from(stringify(sortKeysRecursive(product)))
@@ -232,7 +238,7 @@ export class ProductTransferContract extends Contract {
     ctx: Context,
     id: string
   ): Promise<string[]> {
-    const privateDataCollection = "privateCollection"; // Private data collection name
+    const privateDataCollection = "privateMaterialsCollection"; // Private data collection name
 
     // Get the product data from the chaincode state
     const productDataBytes = await ctx.stub.getState(id);
@@ -246,9 +252,9 @@ export class ProductTransferContract extends Contract {
     const isManufacturer = callerMSPID === productData.Manufacturer;
     const isInApproveEntities =
       productData.ApprovedEntities.includes(callerMSPID);
-    if (!isManufacturer || !isInApproveEntities) {
+    if (!isManufacturer && !isInApproveEntities) {
       throw new Error(
-        `Access denied. Caller does not have permission to read materials of product ${id}`
+        `Access denied. Caller: "${callerMSPID}" does not have permission to read materials of product ${id}.`
       );
     }
 
@@ -266,7 +272,7 @@ export class ProductTransferContract extends Contract {
 
   @Transaction()
   public async RecycleAndOffer(ctx: Context, productId: string): Promise<void> {
-    const privateDataCollection = "privateCollection"; // Private data collection name
+    const privateDataCollection = "privateMaterialsCollection"; // Private data collection name
     const exists = await this.ProductExists(ctx, productId);
     if (!exists) {
       throw new Error(`The asset ${productId} does not exist`);
@@ -278,7 +284,7 @@ export class ProductTransferContract extends Contract {
     const callerMSPID = ctx.clientIdentity.getMSPID();
     const isManufacturer = callerMSPID === product.Manufacturer;
     const isInApproveEntities = product.ApprovedEntities.includes(callerMSPID);
-    if (!isManufacturer || !isInApproveEntities) {
+    if (!isManufacturer && !isInApproveEntities) {
       throw new Error(
         `Access denied. Caller does not have permission to read materials of product ${productId}`
       );
